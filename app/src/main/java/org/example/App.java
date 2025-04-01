@@ -21,6 +21,7 @@ public class App {
         inputDirectory.toFile().mkdirs();
         outputDirectory.toFile().mkdirs();
 
+        System.out.println("Scanning " + inputDirectory + " for structure files.");
         try (Stream<Path> stream = Files.walk(inputDirectory)) {
             stream.filter(
                 Files::isRegularFile
@@ -32,22 +33,18 @@ public class App {
                     var newBlocksList = ListBinaryTag.builder();
                     blocksList.stream().forEach(
                         blockEntry -> {
-                            try {
                                 var nbtTag = (CompoundBinaryTag) ((CompoundBinaryTag) blockEntry).get("nbt");
                                 if (nbtTag != null && nbtTag.getString("id").equals("minecraft:jigsaw")) {
                                     var name = nbtTag.getString("name");
                                     var target = nbtTag.getString("target");
+                                    System.out.println("Swapping name: " + name + " and target: " + target);
                                     nbtTag = nbtTag.putString("name", target).putString("target", name);
-                                    System.out.println(TagStringIO.get().asString(nbtTag));
                                     newBlocksList.add(
                                         ((CompoundBinaryTag) blockEntry).put("nbt", nbtTag)
                                     );
                                 } else {
                                     newBlocksList.add(blockEntry);
                                 }
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
                         }
                     );
                     var newStructure = tag.put("blocks", newBlocksList.build());
